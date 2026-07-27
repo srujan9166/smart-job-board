@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { useForm } from 'react-hook-form';
-import { Plus, Briefcase, FileText, Building, CheckCircle, AlertCircle, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Briefcase, FileText, Building, CheckCircle, AlertCircle, Edit, Trash2, Loader2, Inbox } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
+import { useToast } from '../context/ToastContext';
 
 /**
  * Employer portal dashboard allowing creation/management of company profiles,
@@ -10,6 +12,7 @@ import { Plus, Briefcase, FileText, Building, CheckCircle, AlertCircle, Edit, Tr
  */
 const EmployerDashboard = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [company, setCompany] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -19,12 +22,8 @@ const EmployerDashboard = () => {
   const [activeTab, setActiveTab] = useState('jobs');
 
   // Multi-step sub-states
-  const [companyMsg, setCompanyMsg] = useState(null);
-  const [companyErr, setCompanyErr] = useState(null);
   const [submittingCompany, setSubmittingCompany] = useState(false);
 
-  const [jobMsg, setJobMsg] = useState(null);
-  const [jobErr, setJobErr] = useState(null);
   const [submittingJob, setSubmittingJob] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
 
@@ -87,8 +86,6 @@ const EmployerDashboard = () => {
 
   // Handle Company profile save (create or update)
   const onSaveCompany = async (data) => {
-    setCompanyMsg(null);
-    setCompanyErr(null);
     setSubmittingCompany(true);
     try {
       const payload = {
@@ -105,15 +102,15 @@ const EmployerDashboard = () => {
       let res;
       if (company) {
         res = await api.put(`/api/companies/${company.id}`, payload);
-        setCompanyMsg('Company updated successfully!');
+        showToast('Company details updated successfully!', 'success');
       } else {
         res = await api.post('/api/companies', payload);
-        setCompanyMsg('Company profile created! Loading jobs dashboard...');
+        showToast('Company profile successfully registered!', 'success');
       }
       setCompany(res.data.data);
       loadData();
     } catch (e) {
-      setCompanyErr(e.response?.data?.message || 'Failed to save company details.');
+      showToast(e.response?.data?.message || 'Failed to save company details.', 'error');
     } finally {
       setSubmittingCompany(false);
     }
@@ -121,8 +118,6 @@ const EmployerDashboard = () => {
 
   // Handle Job Post or Edit submit
   const onSaveJob = async (data) => {
-    setJobMsg(null);
-    setJobErr(null);
     setSubmittingJob(true);
     try {
       const payload = {
@@ -145,10 +140,10 @@ const EmployerDashboard = () => {
 
       if (editingJob) {
         await api.put(`/api/jobs/${editingJob.id}`, payload);
-        setJobMsg('Job listing updated successfully!');
+        showToast('Job opening updated successfully!', 'success');
       } else {
         await api.post('/api/jobs', payload);
-        setJobMsg('Job listing published successfully!');
+        showToast('New job opening successfully published!', 'success');
       }
 
       resetJobForm();
@@ -156,7 +151,7 @@ const EmployerDashboard = () => {
       setActiveTab('jobs');
       loadData();
     } catch (e) {
-      setJobErr(e.response?.data?.message || 'Failed to publish job opening.');
+      showToast(e.response?.data?.message || 'Failed to publish job opening.', 'error');
     } finally {
       setSubmittingJob(false);
     }
@@ -191,9 +186,10 @@ const EmployerDashboard = () => {
     }
     try {
       await api.delete(`/api/jobs/${jobId}`);
+      showToast('Job listing deleted successfully.', 'success');
       loadData();
     } catch (e) {
-      alert(e.response?.data?.message || 'Failed to delete job posting.');
+      showToast(e.response?.data?.message || 'Failed to delete job posting.', 'error');
     }
   };
 
@@ -203,9 +199,10 @@ const EmployerDashboard = () => {
       await api.put(`/api/applications/${appId}/status`, null, {
         params: { status: newStatus, actorId: user.id },
       });
+      showToast(`Candidate status updated to ${newStatus}.`, 'success');
       loadData();
     } catch (e) {
-      alert(e.response?.data?.message || 'Invalid status transition requested.');
+      showToast(e.response?.data?.message || 'Invalid status transition requested.', 'error');
     }
   };
 
@@ -281,9 +278,13 @@ const EmployerDashboard = () => {
           </div>
 
           {jobs.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 p-12 text-center rounded-2xl">
-              <p className="text-slate-400 font-medium">You haven't posted any jobs yet.</p>
-            </div>
+            <EmptyState
+              title="No Vacancies Published"
+              description="You haven't posted any job openings yet. Click below to publish your first vacancy."
+              actionText="Publish Vacancy"
+              onActionClick={() => setActiveTab('post-job')}
+              icon={Briefcase}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {jobs.map((job) => (
@@ -322,9 +323,11 @@ const EmployerDashboard = () => {
 
       {activeTab === 'applications' && company && (
         applications.length === 0 ? (
-          <div className="bg-slate-900 border border-slate-800 p-12 text-center rounded-2xl">
-            <p className="text-slate-400 font-medium">No candidates have applied to your job postings yet.</p>
-          </div>
+          <EmptyState
+            title="No Applications Received"
+            description="No candidates have applied to your job postings yet. Make sure your job requirements are clear."
+            icon={Inbox}
+          />
         ) : (
           <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-900">
             <div className="overflow-x-auto">
@@ -384,20 +387,6 @@ const EmployerDashboard = () => {
           <h3 className="text-xl font-bold text-slate-200 border-b border-slate-800 pb-3">
             {editingJob ? 'Edit Vacancy Listing' : 'Publish New Vacancy'}
           </h3>
-
-          {jobMsg && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm p-4 rounded-xl flex items-start gap-2.5">
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{jobMsg}</span>
-            </div>
-          )}
-
-          {jobErr && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-4 rounded-xl flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{jobErr}</span>
-            </div>
-          )}
 
           <form onSubmit={handleJobSubmit(onSaveJob)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -541,20 +530,6 @@ const EmployerDashboard = () => {
       {activeTab === 'company' && (
         <div className="max-w-2xl bg-slate-900 border border-slate-800 p-8 rounded-3xl space-y-6">
           <h3 className="text-xl font-bold text-slate-200 border-b border-slate-800 pb-3">Company Metadata Registry</h3>
-
-          {companyMsg && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm p-4 rounded-xl flex items-start gap-2.5">
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{companyMsg}</span>
-            </div>
-          )}
-
-          {companyErr && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-4 rounded-xl flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{companyErr}</span>
-            </div>
-          )}
 
           <form onSubmit={handleCompanySubmit(onSaveCompany)} className="space-y-4">
             <div>
