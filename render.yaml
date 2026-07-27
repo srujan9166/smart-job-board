@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: smart-job-board-api
+    runtime: docker
+    rootDir: backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+databases:
+  - name: smart-job-board-postgres
+    databaseName: job_board_db
+    user: job_board_user

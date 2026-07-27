@@ -24,6 +24,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Main Spring Security configuration class defining authentication providers,
@@ -38,6 +39,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
+    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:5173}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -50,6 +54,7 @@ public class SecurityConfig {
                 // Public Auth and Documentation endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/health").permitAll()
 
                 // Public Job browsing endpoints
                 .requestMatchers(HttpMethod.GET, "/api/jobs/**").permitAll()
@@ -113,7 +118,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

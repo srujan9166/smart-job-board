@@ -22,6 +22,16 @@ Add the repository variable `VITE_API_BASE_URL` with the deployed API URL. No cr
 
 Backend runtime variables are `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `JWT_SECRET`. Local defaults are provided for development; production deployments should set all secrets explicitly.
 
+## Production deployment
+
+`render.yaml` describes the Spring Boot API and managed PostgreSQL deployment on Render. Create the Render resources from the blueprint, then set `DATABASE_URL` to a JDBC PostgreSQL URL (`jdbc:postgresql://host:5432/database`), database credentials, a strong `JWT_SECRET`, and `CORS_ALLOWED_ORIGINS` to the exact Vercel origin (for example `https://smart-board.example.vercel.app`). The API readiness endpoint is `/api/health`; it returns `200` only when PostgreSQL is reachable and `503` otherwise.
+
+On Vercel, set `VITE_API_BASE_URL` to the HTTPS Render API URL and deploy the `frontend/` directory. `frontend/vercel.json` rewrites client-side routes to `index.html`, preserving React Router navigation on refresh.
+
+The current upload implementation stores files locally. This is suitable for development only because Render filesystem storage is ephemeral; production file uploads should use S3, Azure Blob, or another durable object store behind the existing file-storage abstraction before enabling user uploads at scale.
+
+Run the schema/migrations against the managed database before starting the API. Keep `spring.jpa.hibernate.ddl-auto=validate` in production so unexpected schema drift fails startup rather than silently changing data.
+
 ## Local validation
 
 ```text
