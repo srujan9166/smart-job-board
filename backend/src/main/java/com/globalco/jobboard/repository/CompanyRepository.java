@@ -4,6 +4,8 @@ import com.globalco.jobboard.entity.Company;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,7 +13,7 @@ import java.util.UUID;
  * Repository interface for managing {@link Company} entity persistence.
  */
 @Repository
-public interface CompanyRepository extends JpaRepository<Company, UUID> {
+public interface CompanyRepository extends JpaRepository<Company, UUID>, JpaSpecificationExecutor<Company> {
 
     /**
      * Finds a company by its exact name.

@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,7 +19,10 @@ import java.util.UUID;
  * Employs deep EntityGraphs to fetch related job and candidate tables in single transactions.
  */
 @Repository
-public interface ApplicationRepository extends JpaRepository<Application, UUID> {
+public interface ApplicationRepository extends JpaRepository<Application, UUID>, JpaSpecificationExecutor<Application> {
+
+    @EntityGraph(attributePaths = {"job", "job.company", "seeker", "seeker.user"})
+    Page<Application> findAll(Specification<Application> spec, Pageable pageable);
 
     /**
      * Retrieves an application by its ID with full pre-fetching.

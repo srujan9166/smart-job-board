@@ -7,6 +7,7 @@ import com.globalco.jobboard.entity.JobType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -93,6 +94,31 @@ public interface JobService {
      * @return page of matching jobs
      */
     Page<JobResponseDTO> getJobsByExperienceLevel(ExperienceLevel experienceLevel, Pageable pageable);
+
+    /**
+     * Performs keyword search, multi-field filtering, pagination, and sorting for jobs.
+     *
+     * @param keyword search keyword
+     * @param categoryId category identifier
+     * @param companyId company identifier
+     * @param location location query
+     * @param jobType employment type
+     * @param experienceLevel experience level
+     * @param salaryMin minimum salary bounds
+     * @param salaryMax maximum salary bounds
+     * @param pageable pagination settings
+     * @return page of matching response DTOs
+     */
+    Page<JobResponseDTO> searchAndFilterJobs(
+            String keyword,
+            UUID categoryId,
+            UUID companyId,
+            String location,
+            JobType jobType,
+            ExperienceLevel experienceLevel,
+            BigDecimal salaryMin,
+            BigDecimal salaryMax,
+            Pageable pageable);
 
     /**
      * Updates an existing job's details.

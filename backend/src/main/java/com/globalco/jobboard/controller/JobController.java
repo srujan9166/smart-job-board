@@ -50,14 +50,33 @@ public class JobController {
     }
 
     /**
-     * Gets active jobs with pagination.
+     * Retrieves active jobs matching search keyword, category, company, location, types, and salaries.
+     * Supports pagination and sorting.
      *
-     * @param pageable page settings
-     * @return 200 OK containing page of active jobs
+     * @param keyword search keyword (optional)
+     * @param categoryId category identifier (optional)
+     * @param companyId company identifier (optional)
+     * @param location location query string (optional)
+     * @param jobType employment type (optional)
+     * @param experienceLevel experience level (optional)
+     * @param salaryMin minimum salary range (optional)
+     * @param salaryMax maximum salary range (optional)
+     * @param pageable pagination settings
+     * @return 200 OK containing page of matching jobs
      */
     @GetMapping
-    public ResponseEntity<Page<JobResponseDTO>> getActiveJobs(Pageable pageable) {
-        Page<JobResponseDTO> response = jobService.getActiveJobs(pageable);
+    public ResponseEntity<Page<JobResponseDTO>> getActiveJobs(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) JobType jobType,
+            @RequestParam(required = false) ExperienceLevel experienceLevel,
+            @RequestParam(required = false) java.math.BigDecimal salaryMin,
+            @RequestParam(required = false) java.math.BigDecimal salaryMax,
+            Pageable pageable) {
+        Page<JobResponseDTO> response = jobService.searchAndFilterJobs(
+                keyword, categoryId, companyId, location, jobType, experienceLevel, salaryMin, salaryMax, pageable);
         return ResponseEntity.ok(response);
     }
 

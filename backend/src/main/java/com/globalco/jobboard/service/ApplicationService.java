@@ -14,6 +14,17 @@ import java.util.UUID;
 public interface ApplicationService {
 
     /**
+     * Retrieves job applications matching search filters with pagination and sorting.
+     *
+     * @param status application pipeline status
+     * @param seekerId candidate seeker user identifier
+     * @param jobId job post identifier
+     * @param pageable page settings
+     * @return page of matching applications
+     */
+    Page<ApplicationResponseDTO> getApplications(ApplicationStatus status, UUID seekerId, UUID jobId, Pageable pageable);
+
+    /**
      * Submits a candidate's application for a job.
      *
      * @param dto application payload

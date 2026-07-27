@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.util.UUID;
 
 /**
@@ -16,7 +19,10 @@ import java.util.UUID;
  * Implements entity graphs and native full-text searches for performance.
  */
 @Repository
-public interface JobRepository extends JpaRepository<Job, UUID> {
+public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificationExecutor<Job> {
+
+    @EntityGraph(attributePaths = {"company", "category", "postedBy"})
+    Page<Job> findAll(Specification<Job> spec, Pageable pageable);
 
     /**
      * Retrieves all jobs with paginated support and pre-fetches company,

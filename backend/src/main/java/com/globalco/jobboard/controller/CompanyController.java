@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.UUID;
 
 /**
@@ -20,6 +23,23 @@ import java.util.UUID;
 public class CompanyController {
 
     private final CompanyService companyService;
+
+    /**
+     * Gets all companies with pagination, sorting, and name/location filtering.
+     *
+     * @param name company name query (optional)
+     * @param location company location query (optional)
+     * @param pageable page settings
+     * @return 200 OK containing page of matching companies
+     */
+    @GetMapping
+    public ResponseEntity<Page<CompanyResponseDTO>> getCompanies(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String location,
+            Pageable pageable) {
+        Page<CompanyResponseDTO> response = companyService.getCompanies(name, location, pageable);
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * Registers a new company.

@@ -25,6 +25,25 @@ public class ApplicationController {
     private final ApplicationService applicationService;
 
     /**
+     * Gets all job applications with pagination, sorting, and status/seeker/job filters.
+     *
+     * @param status application pipeline status (optional)
+     * @param seekerId candidate seeker user identifier (optional)
+     * @param jobId job post identifier (optional)
+     * @param pageable pagination settings
+     * @return 200 OK containing page of matching applications
+     */
+    @GetMapping
+    public ResponseEntity<Page<ApplicationResponseDTO>> getApplications(
+            @RequestParam(required = false) ApplicationStatus status,
+            @RequestParam(required = false) UUID seekerId,
+            @RequestParam(required = false) UUID jobId,
+            Pageable pageable) {
+        Page<ApplicationResponseDTO> response = applicationService.getApplications(status, seekerId, jobId, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Submits a candidate application for a job vacancy.
      *
      * @param requestDTO application payload

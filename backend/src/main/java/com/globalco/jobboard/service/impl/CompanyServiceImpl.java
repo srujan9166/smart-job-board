@@ -16,6 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import com.globalco.jobboard.repository.specification.CompanySpecification;
+
 import java.util.UUID;
 
 /**
@@ -109,5 +114,40 @@ public class CompanyServiceImpl implements CompanyService {
 
         companyRepository.delete(company);
         log.info("Successfully deleted company with ID: {}", id);
+    }
+
+    @Override
+    public Page<CompanyResponseDTO> getCompanies(String name, String location, Pageable pageable) {
+        log.debug("Filtering companies by name: '{}' and location: '{}'", name, location);
+
+        validatePageable(pageable);
+        validateCompanySort(pageable.getSort());
+
+        Specification<Company> spec = CompanySpecification.filterCompanies(name, location);
+        return companyRepository.findAll(spec, pageable)
+                .map(companyMapper::toResponseDTO);
+    }
+
+    private void validatePageable(Pageable pageable) {
+        if (pageable.getPageNumber() < 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page number cannot be less than zero.");
+        }
+        if (pageable.getPageSize() <= 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page size must be greater than zero.");
+        }
+        if (pageable.getPageSize() > 100) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page size cannot exceed 100.");
+        }
+    }
+
+    private void validateCompanySort(org.springframework.data.domain.Sort sort) {
+        if (sort == null) return;
+        java.util.Set<String> allowedFields = java.util.Set.of("name");
+        for (org.springframework.data.domain.Sort.Order order : sort) {
+            if (!allowedFields.contains(order.getProperty())) {
+                throw new com.globalco.jobboard.exception.InvalidOperationException(
+                        "Invalid sorting property: '" + order.getProperty() + "'. Allowed properties are: " + allowedFields);
+            }
+        }
     }
 }

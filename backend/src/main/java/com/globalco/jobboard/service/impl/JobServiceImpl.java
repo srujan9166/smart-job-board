@@ -18,7 +18,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.UUID;
+import org.springframework.data.jpa.domain.Specification;
+import com.globalco.jobboard.repository.specification.JobSpecification;
 
 /**
  * Implementation of {@link JobService} managing job openings postings.
@@ -165,5 +168,53 @@ public class JobServiceImpl implements JobService {
         }
         jobRepository.deleteById(id);
         log.info("Successfully deleted job with ID: {}", id);
+    }
+
+    @Override
+    public Page<JobResponseDTO> searchAndFilterJobs(
+            String keyword,
+            UUID categoryId,
+            UUID companyId,
+            String location,
+            JobType jobType,
+            ExperienceLevel experienceLevel,
+            BigDecimal salaryMin,
+            BigDecimal salaryMax,
+            Pageable pageable) {
+
+        log.debug("Searching and filtering jobs - keyword: {}, category: {}, company: {}, location: {}", 
+                keyword, categoryId, companyId, location);
+
+        validatePageable(pageable);
+        validateJobSort(pageable.getSort());
+
+        Specification<Job> spec = JobSpecification.filterJobs(
+                keyword, categoryId, companyId, location, jobType, experienceLevel, salaryMin, salaryMax, JobStatus.ACTIVE);
+
+        return jobRepository.findAll(spec, pageable)
+                .map(jobMapper::toResponseDTO);
+    }
+
+    private void validatePageable(Pageable pageable) {
+        if (pageable.getPageNumber() < 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page number cannot be less than zero.");
+        }
+        if (pageable.getPageSize() <= 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page size must be greater than zero.");
+        }
+        if (pageable.getPageSize() > 100) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page size cannot exceed 100.");
+        }
+    }
+
+    private void validateJobSort(org.springframework.data.domain.Sort sort) {
+        if (sort == null) return;
+        java.util.Set<String> allowedFields = java.util.Set.of("createdAt", "salaryMin", "salaryMax", "title", "company.name");
+        for (org.springframework.data.domain.Sort.Order order : sort) {
+            if (!allowedFields.contains(order.getProperty())) {
+                throw new com.globalco.jobboard.exception.InvalidOperationException(
+                        "Invalid sorting property: '" + order.getProperty() + "'. Allowed properties are: " + allowedFields);
+            }
+        }
     }
 }

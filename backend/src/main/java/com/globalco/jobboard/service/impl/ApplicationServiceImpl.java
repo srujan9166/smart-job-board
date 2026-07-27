@@ -20,6 +20,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.jpa.domain.Specification;
+import com.globalco.jobboard.repository.specification.ApplicationSpecification;
+
 import java.util.UUID;
 
 /**
@@ -155,5 +158,40 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found with ID: " + id));
         applicationRepository.delete(application);
         log.info("Successfully withdrew job application with ID: {}", id);
+    }
+
+    @Override
+    public Page<ApplicationResponseDTO> getApplications(ApplicationStatus status, UUID seekerId, UUID jobId, Pageable pageable) {
+        log.debug("Filtering applications - status: {}, seekerId: {}, jobId: {}", status, seekerId, jobId);
+
+        validatePageable(pageable);
+        validateApplicationSort(pageable.getSort());
+
+        Specification<Application> spec = ApplicationSpecification.filterApplications(status, seekerId, jobId);
+        return applicationRepository.findAll(spec, pageable)
+                .map(applicationMapper::toResponseDTO);
+    }
+
+    private void validatePageable(Pageable pageable) {
+        if (pageable.getPageNumber() < 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page number cannot be less than zero.");
+        }
+        if (pageable.getPageSize() <= 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page size must be greater than zero.");
+        }
+        if (pageable.getPageSize() > 100) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Page size cannot exceed 100.");
+        }
+    }
+
+    private void validateApplicationSort(org.springframework.data.domain.Sort sort) {
+        if (sort == null) return;
+        java.util.Set<String> allowedFields = java.util.Set.of("appliedAt", "status");
+        for (org.springframework.data.domain.Sort.Order order : sort) {
+            if (!allowedFields.contains(order.getProperty())) {
+                throw new com.globalco.jobboard.exception.InvalidOperationException(
+                        "Invalid sorting property: '" + order.getProperty() + "'. Allowed properties are: " + allowedFields);
+            }
+        }
     }
 }

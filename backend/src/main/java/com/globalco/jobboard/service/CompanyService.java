@@ -3,12 +3,25 @@ package com.globalco.jobboard.service;
 import com.globalco.jobboard.dto.request.CompanyRequestDTO;
 import com.globalco.jobboard.dto.response.CompanyResponseDTO;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.UUID;
 
 /**
  * Service interface defining company business actions.
  */
 public interface CompanyService {
+
+    /**
+     * Retrieves companies matching search filters with pagination and sorting.
+     *
+     * @param name company name query
+     * @param location location query
+     * @param pageable page settings
+     * @return page of matching companies
+     */
+    Page<CompanyResponseDTO> getCompanies(String name, String location, Pageable pageable);
 
     /**
      * Registers a new company.
