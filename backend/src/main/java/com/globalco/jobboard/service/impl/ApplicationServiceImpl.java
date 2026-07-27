@@ -88,10 +88,20 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    @Transactional
     public Page<ApplicationResponseDTO> getApplicationsBySeeker(UUID seekerId, Pageable pageable) {
         log.debug("Retrieving applications for seeker ID: {}", seekerId);
         if (!seekerProfileRepository.existsById(seekerId)) {
-            throw new ResourceNotFoundException("Seeker profile not found with ID: " + seekerId);
+            User user = userRepository.findById(seekerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + seekerId));
+            if (user.getRole() == UserRole.JOB_SEEKER) {
+                SeekerProfile newProfile = SeekerProfile.builder()
+                        .user(user)
+                        .build();
+                seekerProfileRepository.save(newProfile);
+            } else {
+                throw new ResourceNotFoundException("User with ID: " + seekerId + " is not a JOB_SEEKER.");
+            }
         }
         return applicationRepository.findBySeekerUserId(seekerId, pageable)
                 .map(applicationMapper::toResponseDTO);

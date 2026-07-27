@@ -3,7 +3,6 @@ package com.globalco.jobboard.service.impl;
 import com.globalco.jobboard.dto.request.UserRequestDTO;
 import com.globalco.jobboard.dto.response.UserResponseDTO;
 import com.globalco.jobboard.entity.User;
-import com.globalco.jobboard.entity.UserRole;
 import com.globalco.jobboard.exception.DuplicateResourceException;
 import com.globalco.jobboard.exception.ResourceNotFoundException;
 import com.globalco.jobboard.mapper.UserMapper;
@@ -12,10 +11,10 @@ import com.globalco.jobboard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -30,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -42,6 +42,15 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userMapper.toEntity(dto);
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+
+        if (user.getRole() == com.globalco.jobboard.entity.UserRole.JOB_SEEKER) {
+            com.globalco.jobboard.entity.SeekerProfile seekerProfile = com.globalco.jobboard.entity.SeekerProfile.builder()
+                    .user(user)
+                    .build();
+            user.setSeekerProfile(seekerProfile);
+        }
+        
         User savedUser = userRepository.save(user);
         
         log.info("Successfully registered user with ID: {}", savedUser.getId());
@@ -79,6 +88,10 @@ public class UserServiceImpl implements UserService {
         }
 
         userMapper.updateEntity(dto, user);
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        }
+        
         User updatedUser = userRepository.save(user);
         
         log.info("Successfully updated user with ID: {}", updatedUser.getId());
