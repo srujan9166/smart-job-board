@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useForm } from 'react-hook-form';
-import { Layers, Plus, Trash2, Tag, Building, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 /**
  * Admin portal dashboard enabling classification category mapping,
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Tab controls */}
-      <div className="flex gap-4 border-b border-slate-850">
+      <div className="flex gap-4 overflow-x-auto border-b border-slate-800" role="tablist" aria-label="Admin dashboard sections">
         <button
           onClick={() => { setActiveTab('categories'); setMsg(null); setErr(null); }}
           className={`pb-3 text-sm font-bold border-b-2 transition-all ${
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Create Category Form */}
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl h-fit space-y-4">
-            <h3 className="text-lg font-bold text-slate-200 border-b border-slate-855 pb-2">Add New Category</h3>
+            <h3 className="text-lg font-bold text-slate-200 border-b border-slate-800 pb-2">Add New Category</h3>
             {msg && <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3 rounded-xl text-xs flex items-center gap-1.5"><CheckCircle className="w-4 h-4" />{msg}</div>}
             {err && <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-xs flex items-center gap-1.5"><AlertCircle className="w-4 h-4" />{err}</div>}
 
@@ -199,9 +199,9 @@ const AdminDashboard = () => {
 
           {/* Categories list */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-900">
+            <div className="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900">
               <table className="min-w-full divide-y divide-slate-800">
-                <thead className="bg-slate-955">
+                <thead className="bg-slate-950">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Category Name</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Slug / Description</th>
@@ -234,7 +234,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Create Skill Form */}
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl h-fit space-y-4">
-            <h3 className="text-lg font-bold text-slate-200 border-b border-slate-855 pb-2">Add New Skill</h3>
+            <h3 className="text-lg font-bold text-slate-200 border-b border-slate-800 pb-2">Add New Skill</h3>
             {msg && <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3 rounded-xl text-xs flex items-center gap-1.5"><CheckCircle className="w-4 h-4" />{msg}</div>}
             {err && <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-xs flex items-center gap-1.5"><AlertCircle className="w-4 h-4" />{err}</div>}
 
@@ -270,9 +270,9 @@ const AdminDashboard = () => {
 
           {/* Skills list */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-900">
+            <div className="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900">
               <table className="min-w-full divide-y divide-slate-800">
-                <thead className="bg-slate-955">
+                <thead className="bg-slate-950">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Skill</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Parent Category</th>
@@ -299,9 +299,9 @@ const AdminDashboard = () => {
       )}
 
       {activeTab === 'companies' && (
-        <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-900">
+        <div className="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900">
           <table className="min-w-full divide-y divide-slate-800">
-            <thead className="bg-slate-955">
+            <thead className="bg-slate-950">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Company Name</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-slate-400 uppercase">Industry</th>

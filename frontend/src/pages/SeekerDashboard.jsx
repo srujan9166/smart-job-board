@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { useForm } from 'react-hook-form';
-import { Layers, FileText, CheckCircle2, XCircle, AlertCircle, Trash2, Edit2, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Trash2, Edit2, Loader2 } from 'lucide-react';
 
 /**
  * Seeker dashboard tab layout combining application audit lists,
  * status changes, withdrawals, and profile info updates.
  */
 const SeekerDashboard = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('applications');
@@ -75,11 +75,8 @@ const SeekerDashboard = () => {
       };
 
       const res = await api.put(`/api/users/${user.id}`, updatePayload);
-      localStorage.setItem('user', JSON.stringify(res.data.data));
-      setProfileMsg('Profile updated successfully! Reloading...');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      updateUser(res.data.data);
+      setProfileMsg('Profile updated successfully.');
     } catch (e) {
       setProfileError(e.response?.data?.message || 'Failed to update profile details.');
     } finally {
@@ -114,7 +111,7 @@ const SeekerDashboard = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-4 border-b border-slate-850">
+      <div className="flex gap-4 overflow-x-auto border-b border-slate-800" role="tablist" aria-label="Candidate dashboard sections">
         <button
           onClick={() => setActiveTab('applications')}
           className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'applications'
@@ -149,7 +146,7 @@ const SeekerDashboard = () => {
             </Link>
           </div>
         ) : (
-          <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-900">
+            <div className="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-800">
                 <thead className="bg-slate-950">

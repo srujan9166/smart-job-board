@@ -57,6 +57,8 @@ public class SecurityConfig {
                 // Public Company metadata endpoints
                 .requestMatchers(HttpMethod.GET, "/api/companies/**").permitAll()
 
+                .requestMatchers("/api/company/**").hasAnyRole("EMPLOYER", "ADMIN")
+
                 // Public Categories and Skills directory lookup endpoints
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/skills/**").permitAll()

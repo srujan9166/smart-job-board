@@ -50,7 +50,7 @@ public class CompanyRequestDTO {
     @Schema(description = "Location city and country of company headquarters", example = "New York, USA")
     private String headquarters;
 
-    @NotNull(message = "Creator user ID is required")
+    /** Ignored by authenticated employer endpoints; retained for legacy admin APIs. */
     @Schema(description = "surrogate UUID of user creator", example = "a2c13d8b-4b10-44be-8b22-832679f22579", requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID createdById;
 }

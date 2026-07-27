@@ -32,6 +32,13 @@ public interface CompanyRepository extends JpaRepository<Company, UUID>, JpaSpec
     Optional<Company> findBySlug(String slug);
 
     /**
+     * Returns the original company profile for an employer. The ordered lookup
+     * remains safe for legacy databases that contain duplicate profiles created
+     * before the one-company-per-employer rule was introduced.
+     */
+    Optional<Company> findFirstByCreatedByIdOrderByCreatedAtAsc(UUID userId);
+
+    /**
      * Checks if a company exists with the given name.
      *
      * @param name company name

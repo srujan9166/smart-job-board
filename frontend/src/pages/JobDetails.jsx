@@ -3,7 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { MapPin, Briefcase, DollarSign, Calendar, Mail, FileText, ChevronLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { MapPin, DollarSign, Calendar, FileText, ChevronLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 
 /**
  * Public Job Details view page with interactive application submission modal
@@ -19,6 +21,7 @@ const JobDetails = () => {
   const [applyError, setApplyError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   const {
     register,
@@ -31,6 +34,7 @@ const JobDetails = () => {
   useEffect(() => {
     const loadJobDetails = async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         const res = await api.get(`/api/jobs/${id}`);
         setJob(res.data.data);
@@ -49,7 +53,7 @@ const JobDetails = () => {
           }
         }
       } catch (err) {
-        console.error('Failed to load job', err);
+        setLoadError(err.response?.data?.message || 'We could not load this job posting. Check your connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -84,10 +88,12 @@ const JobDetails = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-32">
-        <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
-      </div>
+      <LoadingState label="Loading job details…" className="py-32" />
     );
+  }
+
+  if (loadError) {
+    return <ErrorState message={loadError} onRetry={() => window.location.reload()} className="mx-auto max-w-2xl" />;
   }
 
   if (!job) {
@@ -204,7 +210,7 @@ const JobDetails = () => {
                     className={`text-xs px-3 py-1 rounded-full border ${
                       js.importance === 'REQUIRED'
                         ? 'bg-purple-500/10 border-purple-500/30 text-purple-400 font-semibold'
-                        : 'bg-slate-950 border-slate-850 text-slate-400'
+                        : 'bg-slate-950 border-slate-800 text-slate-400'
                     }`}
                   >
                     {js.skillName} {js.importance === 'REQUIRED' ? '(Required)' : ''}

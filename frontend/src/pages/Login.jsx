@@ -76,7 +76,7 @@ const Login = () => {
                       message: 'Please enter a valid email address',
                     },
                   })}
-                  className="bg-transparent border-none outline-none text-slate-100 placeholder-slate-655 w-full text-sm"
+                  className="bg-transparent border-none outline-none text-slate-100 placeholder-slate-600 w-full text-sm"
                 />
               </div>
               {errors.email && (
@@ -95,7 +95,7 @@ const Login = () => {
                   {...register('password', {
                     required: 'Password is required',
                   })}
-                  className="bg-transparent border-none outline-none text-slate-100 placeholder-slate-655 w-full text-sm"
+                  className="bg-transparent border-none outline-none text-slate-100 placeholder-slate-600 w-full text-sm"
                 />
               </div>
               {errors.password && (

@@ -4,6 +4,7 @@ import com.globalco.jobboard.dto.request.CompanyRequestDTO;
 import com.globalco.jobboard.dto.response.CompanyResponseDTO;
 import com.globalco.jobboard.entity.Company;
 import com.globalco.jobboard.entity.User;
+import com.globalco.jobboard.entity.UserRole;
 import com.globalco.jobboard.exception.DuplicateResourceException;
 import com.globalco.jobboard.exception.ResourceNotFoundException;
 import com.globalco.jobboard.mapper.CompanyMapper;
@@ -55,6 +56,41 @@ public class CompanyServiceImpl implements CompanyService {
 
         log.info("Successfully created company with ID: {}", savedCompany.getId());
         return companyMapper.toResponseDTO(savedCompany);
+    }
+
+    @Override
+    @Transactional
+    public CompanyResponseDTO createCompanyForEmployer(CompanyRequestDTO dto, UUID employerId) {
+        User employer = userRepository.findById(employerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employer not found."));
+        if (employer.getRole() != UserRole.EMPLOYER) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Only employers can create a company profile.");
+        }
+        if (companyRepository.findFirstByCreatedByIdOrderByCreatedAtAsc(employerId).isPresent()) {
+            throw new DuplicateResourceException("You already have a company profile.");
+        }
+        if (companyRepository.existsByName(dto.getName())) {
+            throw new DuplicateResourceException("A company with name " + dto.getName() + " already exists.");
+        }
+        return companyMapper.toResponseDTO(companyRepository.save(companyMapper.toEntity(dto, employer)));
+    }
+
+    @Override
+    public CompanyResponseDTO getMyCompany(UUID employerId) {
+        return companyMapper.toResponseDTO(companyRepository.findFirstByCreatedByIdOrderByCreatedAtAsc(employerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company profile not found. Please configure your company profile.")));
+    }
+
+    @Override
+    @Transactional
+    public CompanyResponseDTO updateMyCompany(CompanyRequestDTO dto, UUID employerId) {
+        Company company = companyRepository.findFirstByCreatedByIdOrderByCreatedAtAsc(employerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company profile not found. Please configure your company profile."));
+        if (!company.getName().equalsIgnoreCase(dto.getName()) && companyRepository.existsByName(dto.getName())) {
+            throw new DuplicateResourceException("A company with name " + dto.getName() + " already exists.");
+        }
+        companyMapper.updateEntity(dto, company);
+        return companyMapper.toResponseDTO(companyRepository.save(company));
     }
 
     @Override

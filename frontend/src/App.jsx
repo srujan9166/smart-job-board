@@ -1,18 +1,20 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import LoadingState from './components/LoadingState';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages
-import Home from './pages/Home';
-import Jobs from './pages/Jobs';
-import JobDetails from './pages/JobDetails';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import SeekerDashboard from './pages/SeekerDashboard';
-import EmployerDashboard from './pages/EmployerDashboard';
-import AdminDashboard from './pages/AdminDashboard';
+const Home = lazy(() => import('./pages/Home'));
+const Jobs = lazy(() => import('./pages/Jobs'));
+const JobDetails = lazy(() => import('./pages/JobDetails'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const SeekerDashboard = lazy(() => import('./pages/SeekerDashboard'));
+const EmployerDashboard = lazy(() => import('./pages/EmployerDashboard'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 /**
  * App component registering routing paths, global provider wrappers,
@@ -22,6 +24,8 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingState label="Loading page…" className="min-h-screen" />}>
         <Routes>
           <Route path="/" element={<MainLayout />}>
             {/* Public paths */}
@@ -65,6 +69,8 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -24,6 +24,8 @@ public interface JobService {
      */
     JobResponseDTO createJob(JobRequestDTO dto);
 
+    JobResponseDTO createJob(JobRequestDTO dto, UUID actorId, boolean administrator);
+
     /**
      * Retrieves a job listing by its unique ID.
      *
@@ -130,6 +132,8 @@ public interface JobService {
      */
     JobResponseDTO updateJob(UUID id, JobRequestDTO dto);
 
+    JobResponseDTO updateJob(UUID id, JobRequestDTO dto, UUID actorId, boolean administrator);
+
     /**
      * Deletes a job listing by its ID.
      *
@@ -137,4 +141,6 @@ public interface JobService {
      * @throws com.globalco.jobboard.exception.ResourceNotFoundException if not found
      */
     void deleteJob(UUID id);
+
+    void deleteJob(UUID id, UUID actorId, boolean administrator);
 }

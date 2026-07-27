@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import api from '../services/api';
-import { Search, MapPin, Briefcase, DollarSign, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Search, MapPin, Briefcase, DollarSign, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 
 /**
  * Public paginated job board listings page. Connects dynamic search keywords,
@@ -14,6 +16,8 @@ const Jobs = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [categoryError, setCategoryError] = useState(null);
 
   // Read params or fall back to defaults
   const keyword = searchParams.get('keyword') || '';
@@ -33,8 +37,8 @@ const Jobs = () => {
       try {
         const res = await api.get('/api/categories');
         setCategories(res.data.data);
-      } catch (err) {
-        console.error('Failed to load categories', err);
+      } catch {
+        setCategoryError('Categories could not be loaded. You can still search by keyword.');
       }
     };
     fetchCategories();
@@ -44,6 +48,7 @@ const Jobs = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
+      setError(null);
       try {
         const params = {
           page,
@@ -63,7 +68,7 @@ const Jobs = () => {
         setTotalPages(res.data.data.totalPages);
         setTotalElements(res.data.data.totalElements);
       } catch (err) {
-        console.error('Failed to load job listings', err);
+        setError(err.response?.data?.message || 'We could not load job listings. Check your connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -123,11 +128,13 @@ const Jobs = () => {
             <SlidersHorizontal className="w-4 h-4 text-purple-400" />
             <span>Filters</span>
           </div>
+          {categoryError && <p className="text-xs text-amber-300" role="status">{categoryError}</p>}
 
           {/* Category Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
+            <label htmlFor="category-filter" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</label>
             <select
+              id="category-filter"
               value={categoryId}
               onChange={(e) => updateParam('categoryId', e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:border-purple-500 outline-none"
@@ -141,8 +148,9 @@ const Jobs = () => {
 
           {/* Location Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Location</label>
+            <label htmlFor="location-filter" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Location</label>
             <input
+              id="location-filter"
               type="text"
               placeholder="e.g. Remote, New York"
               value={location}
@@ -153,8 +161,9 @@ const Jobs = () => {
 
           {/* Job Type Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Job Type</label>
+            <label htmlFor="job-type-filter" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Job Type</label>
             <select
+              id="job-type-filter"
               value={jobType}
               onChange={(e) => updateParam('jobType', e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:border-purple-500 outline-none"
@@ -170,8 +179,9 @@ const Jobs = () => {
 
           {/* Experience level Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Seniority Level</label>
+            <label htmlFor="experience-filter" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Seniority Level</label>
             <select
+              id="experience-filter"
               value={experienceLevel}
               onChange={(e) => updateParam('experienceLevel', e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:border-purple-500 outline-none"
@@ -187,8 +197,9 @@ const Jobs = () => {
 
           {/* Sort Selection */}
           <div className="space-y-2 border-t border-slate-800 pt-4">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sort By</label>
+            <label htmlFor="sort-filter" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sort By</label>
             <select
+              id="sort-filter"
               value={sort}
               onChange={(e) => updateParam('sort', e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-slate-200 focus:border-purple-500 outline-none"
@@ -204,9 +215,9 @@ const Jobs = () => {
         {/* Right Side: Job Grid Cards */}
         <div className="lg:col-span-3 space-y-6">
           {loading ? (
-            <div className="flex justify-center items-center py-24">
-              <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
-            </div>
+            <LoadingState label="Loading job listings…" />
+          ) : error ? (
+            <ErrorState message={error} onRetry={() => window.location.reload()} />
           ) : jobs.length === 0 ? (
             <div className="bg-slate-900 border border-slate-800 p-12 text-center rounded-2xl space-y-3">
               <p className="text-slate-400 font-medium">No job postings found matching your parameters.</p>
@@ -249,12 +260,12 @@ const Jobs = () => {
 
                     <div className="pt-6 mt-4 border-t border-slate-800 flex items-center justify-between">
                       <div className="flex gap-1.5 flex-wrap">
-                        {job.jobSkills.slice(0, 3).map((js) => (
-                          <span key={js.skillId} className="bg-slate-950 text-slate-400 border border-slate-850 px-2 py-0.5 rounded text-[10px]">
+                        {(job.jobSkills || []).slice(0, 3).map((js) => (
+                          <span key={js.skillId} className="bg-slate-950 text-slate-400 border border-slate-800 px-2 py-0.5 rounded text-[10px]">
                             {js.skillName}
                           </span>
                         ))}
-                        {job.jobSkills.length > 3 && (
+                        {(job.jobSkills || []).length > 3 && (
                           <span className="text-slate-500 text-[10px] self-center">+{job.jobSkills.length - 3} more</span>
                         )}
                       </div>

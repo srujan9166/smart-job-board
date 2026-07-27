@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { useForm } from 'react-hook-form';
-import { Plus, Briefcase, FileText, Building, CheckCircle, AlertCircle, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Briefcase, Building, CheckCircle, AlertCircle, Edit, Trash2, Loader2 } from 'lucide-react';
 
 /**
  * Employer portal dashboard allowing creation/management of company profiles,
@@ -14,7 +14,6 @@ const EmployerDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('jobs');
 
@@ -34,9 +33,14 @@ const EmployerDashboard = () => {
   // Load everything
   const loadData = async () => {
     try {
-      // 1. Fetch all companies and find if one was created by this user
-      const compRes = await api.get('/api/companies');
-      const userComp = compRes.data.data.content.find((c) => c.createdById === user.id);
+      // 1. Resolve the company from the authenticated employer, never from a client-owned ID.
+      let userComp = null;
+      try {
+        const compRes = await api.get('/api/company/me');
+        userComp = compRes.data.data;
+      } catch (error) {
+        if (error.response?.status !== 404) throw error;
+      }
 
       if (userComp) {
         setCompany(userComp);
@@ -66,14 +70,14 @@ const EmployerDashboard = () => {
           }
         }
         setApplications(appsList);
+      } else {
+        setActiveTab('company');
       }
 
-      // 4. Load categories and skills for job creation forms
+      // 4. Load categories for job creation forms
       const catRes = await api.get('/api/categories');
       setCategories(catRes.data.data);
 
-      const skillRes = await api.get('/api/skills');
-      setSkills(skillRes.data.data);
     } catch (e) {
       console.error('Failed to load employer dashboard data', e);
     } finally {
@@ -99,15 +103,14 @@ const EmployerDashboard = () => {
         industry: data.industry || null,
         foundedDate: data.foundedDate || null,
         headquarters: data.headquarters || null,
-        createdById: user.id,
       };
 
       let res;
       if (company) {
-        res = await api.put(`/api/companies/${company.id}`, payload);
+        res = await api.put('/api/company/me', payload);
         setCompanyMsg('Company updated successfully!');
       } else {
-        res = await api.post('/api/companies', payload);
+        res = await api.post('/api/company', payload);
         setCompanyMsg('Company profile created! Loading jobs dashboard...');
       }
       setCompany(res.data.data);
@@ -126,9 +129,7 @@ const EmployerDashboard = () => {
     setSubmittingJob(true);
     try {
       const payload = {
-        companyId: company.id,
         categoryId: data.categoryId,
-        postedById: user.id,
         title: data.title,
         description: data.description,
         requirements: data.requirements || null,
@@ -230,7 +231,7 @@ const EmployerDashboard = () => {
       </div>
 
       {/* Navigation tabs */}
-      <div className="flex gap-4 border-b border-slate-850">
+      <div className="flex gap-4 overflow-x-auto border-b border-slate-800" role="tablist" aria-label="Employer dashboard sections">
         <button
           disabled={!company}
           onClick={() => { setActiveTab('jobs'); setEditingJob(null); resetJobForm(); }}
@@ -263,6 +264,14 @@ const EmployerDashboard = () => {
           Company Settings
         </button>
       </div>
+
+      {!company && activeTab !== 'company' && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center">
+          <h3 className="font-bold text-amber-100">Complete your company profile</h3>
+          <p className="mt-1 text-sm text-amber-200">You must configure your company profile before posting jobs.</p>
+          <button type="button" onClick={() => setActiveTab('company')} className="mt-4 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500">Create company profile</button>
+        </div>
+      )}
 
       {/* Tab Panels */}
       {activeTab === 'jobs' && company && (
@@ -322,7 +331,7 @@ const EmployerDashboard = () => {
             <p className="text-slate-400 font-medium">No candidates have applied to your job postings yet.</p>
           </div>
         ) : (
-          <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-900">
+            <div className="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-800">
                 <thead className="bg-slate-950">

@@ -33,6 +33,12 @@ public interface CompanyService {
      */
     CompanyResponseDTO createCompany(CompanyRequestDTO dto);
 
+    CompanyResponseDTO createCompanyForEmployer(CompanyRequestDTO dto, UUID employerId);
+
+    CompanyResponseDTO getMyCompany(UUID employerId);
+
+    CompanyResponseDTO updateMyCompany(CompanyRequestDTO dto, UUID employerId);
+
     /**
      * Retrieves a company by its unique ID.
      *

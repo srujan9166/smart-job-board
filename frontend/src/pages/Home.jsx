@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, MapPin, Briefcase, Award, TrendingUp, Users } from 'lucide-react';
+import { Search, Briefcase, Award, Users } from 'lucide-react';
 
 /**
  * Public landing page for the application featuring hero keyword searches
@@ -28,9 +28,10 @@ const Home = () => {
 
         {/* Global Search Bar Console */}
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 bg-slate-900 border border-slate-800 p-3 rounded-2xl max-w-2xl mx-auto shadow-2xl shadow-purple-950/20">
-          <div className="flex-grow flex items-center gap-2 px-3 py-2 bg-slate-950 rounded-xl border border-slate-850">
+          <div className="flex-grow flex items-center gap-2 px-3 py-2 bg-slate-950 rounded-xl border border-slate-800">
             <Search className="w-5 h-5 text-purple-400" />
             <input
+              aria-label="Search jobs"
               type="text"
               placeholder="Job titles, tech stacks, or keywords..."
               value={keyword}
@@ -81,7 +82,7 @@ const Home = () => {
       </section>
 
       {/* Action Portal Redirect Panels */}
-      <section className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-850 p-8 sm:p-12 rounded-3xl max-w-5xl mx-auto text-center space-y-6">
+      <section className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 p-8 sm:p-12 rounded-3xl max-w-5xl mx-auto text-center space-y-6">
         <h2 className="text-3xl font-extrabold text-slate-200">Are you hiring talent?</h2>
         <p className="text-slate-400 max-w-xl mx-auto text-sm sm:text-base">
           Publish listings, target developer skillsets, track application pipeline stages, and manage candidate workflows all in one place.

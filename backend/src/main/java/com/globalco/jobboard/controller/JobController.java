@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.globalco.jobboard.security.CustomUserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 /**
  * REST controller exposing job listings creation, searching, filtering, and management APIs.
@@ -40,8 +42,9 @@ public class JobController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Job opening successfully published")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid payload details or salary range bounds")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Associated company, category, or poster user not found")
-    public ResponseEntity<JobResponseDTO> createJob(@Valid @RequestBody JobRequestDTO requestDTO) {
-        JobResponseDTO response = jobService.createJob(requestDTO);
+    public ResponseEntity<JobResponseDTO> createJob(@Valid @RequestBody JobRequestDTO requestDTO, @AuthenticationPrincipal CustomUserDetails principal) {
+        boolean administrator = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        JobResponseDTO response = jobService.createJob(requestDTO, principal.getId(), administrator);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -203,8 +206,9 @@ public class JobController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Job post matching the ID does not exist")
     public ResponseEntity<JobResponseDTO> updateJob(
             @PathVariable UUID id,
-            @Valid @RequestBody JobRequestDTO requestDTO) {
-        JobResponseDTO response = jobService.updateJob(id, requestDTO);
+            @Valid @RequestBody JobRequestDTO requestDTO, @AuthenticationPrincipal CustomUserDetails principal) {
+        boolean administrator = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        JobResponseDTO response = jobService.updateJob(id, requestDTO, principal.getId(), administrator);
         return ResponseEntity.ok(response);
     }
 
@@ -218,8 +222,9 @@ public class JobController {
     @Operation(summary = "Delete job listing", description = "Deletes a job posting matching the given UUID from the directory.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Job post successfully deleted")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Job post matching the ID does not exist")
-    public ResponseEntity<Void> deleteJob(@PathVariable UUID id) {
-        jobService.deleteJob(id);
+    public ResponseEntity<Void> deleteJob(@PathVariable UUID id, @AuthenticationPrincipal CustomUserDetails principal) {
+        boolean administrator = principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        jobService.deleteJob(id, principal.getId(), administrator);
         return ResponseEntity.noContent().build();
     }
 }

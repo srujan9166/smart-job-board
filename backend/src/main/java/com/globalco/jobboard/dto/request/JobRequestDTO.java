@@ -26,7 +26,7 @@ import java.util.UUID;
 @Schema(description = "Payload representing a new job opening post request")
 public class JobRequestDTO {
 
-    @NotNull(message = "Company ID is required")
+    /** Server-derived for authenticated employer requests; retained for admin/legacy compatibility. */
     @Schema(description = "surrogate UUID of company poster", example = "ef4d52bb-7d8a-4d7a-8f5b-592f7c00e123", requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID companyId;
 
@@ -34,7 +34,7 @@ public class JobRequestDTO {
     @Schema(description = "surrogate UUID of category classification", example = "c6c13d8b-4b10-44be-8b22-832679f22579", requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID categoryId;
 
-    @NotNull(message = "Posted by user ID is required")
+    /** Server-derived from the authenticated user. */
     @Schema(description = "surrogate UUID of user poster", example = "a2c13d8b-4b10-44be-8b22-832679f22579", requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID postedById;
 

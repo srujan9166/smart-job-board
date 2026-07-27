@@ -67,6 +67,26 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Transactional
+    public JobResponseDTO createJob(JobRequestDTO dto, UUID actorId, boolean administrator) {
+        User actor = userRepository.findById(actorId).orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found."));
+        Company company;
+        if (administrator) {
+            company = companyRepository.findById(dto.getCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Company not found with ID: " + dto.getCompanyId()));
+        } else {
+            company = companyRepository.findFirstByCreatedByIdOrderByCreatedAtAsc(actorId).orElseThrow(() ->
+                    new com.globalco.jobboard.exception.InvalidOperationException("You must configure your company profile before posting jobs."));
+        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + dto.getCategoryId()));
+        if (dto.getSalaryMin() != null && dto.getSalaryMax() != null && dto.getSalaryMax().compareTo(dto.getSalaryMin()) < 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Maximum salary cannot be less than minimum salary.");
+        }
+        return jobMapper.toResponseDTO(jobRepository.save(jobMapper.toEntity(dto, company, category, actor)));
+    }
+
+    @Override
     public JobResponseDTO getJobById(UUID id) {
         log.debug("Retrieving job by ID: {}", id);
         Job job = jobRepository.findById(id)
@@ -161,6 +181,23 @@ public class JobServiceImpl implements JobService {
 
     @Override
     @Transactional
+    public JobResponseDTO updateJob(UUID id, JobRequestDTO dto, UUID actorId, boolean administrator) {
+        Job job = jobRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Job not found with ID: " + id));
+        if (!administrator && !job.getCompany().getCreatedBy().getId().equals(actorId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only edit jobs belonging to your company.");
+        }
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + dto.getCategoryId()));
+        if (dto.getSalaryMin() != null && dto.getSalaryMax() != null && dto.getSalaryMax().compareTo(dto.getSalaryMin()) < 0) {
+            throw new com.globalco.jobboard.exception.InvalidOperationException("Maximum salary cannot be less than minimum salary.");
+        }
+        // Employers cannot reassign jobs: retain the server-owned company relationship.
+        jobMapper.updateEntity(dto, job, job.getCompany(), category);
+        return jobMapper.toResponseDTO(jobRepository.save(job));
+    }
+
+    @Override
+    @Transactional
     public void deleteJob(UUID id) {
         log.info("Deleting job with ID: {}", id);
         if (!jobRepository.existsById(id)) {
@@ -168,6 +205,16 @@ public class JobServiceImpl implements JobService {
         }
         jobRepository.deleteById(id);
         log.info("Successfully deleted job with ID: {}", id);
+    }
+
+    @Override
+    @Transactional
+    public void deleteJob(UUID id, UUID actorId, boolean administrator) {
+        Job job = jobRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Job not found with ID: " + id));
+        if (!administrator && !job.getCompany().getCreatedBy().getId().equals(actorId)) {
+            throw new org.springframework.security.access.AccessDeniedException("You can only delete jobs belonging to your company.");
+        }
+        jobRepository.delete(job);
     }
 
     @Override

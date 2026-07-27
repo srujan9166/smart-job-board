@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, Outlet } from 'react-router-dom';
+import { Link, NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, Briefcase, PlusCircle, CheckSquare, Settings, Menu, X } from 'lucide-react';
 
@@ -31,8 +31,8 @@ const MainLayout = () => {
               
               <div className="hidden md:block ml-10">
                 <div className="flex items-baseline space-x-4">
-                  <Link to="/" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</Link>
-                  <Link to="/jobs" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Find Jobs</Link>
+                  <NavLink to="/" end className={({ isActive }) => `px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white'}`}>Home</NavLink>
+                  <NavLink to="/jobs" className={({ isActive }) => `px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white'}`}>Find Jobs</NavLink>
                 </div>
               </div>
             </div>
@@ -73,7 +73,7 @@ const MainLayout = () => {
 
             {/* Mobile menu button */}
             <div className="md:hidden flex items-center">
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-400 hover:text-white p-2">
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-400 hover:text-white p-2" aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation">
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
             </div>
@@ -82,7 +82,7 @@ const MainLayout = () => {
 
         {/* Mobile menu links */}
         {mobileMenuOpen && (
-          <div className="md:hidden px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-slate-900 border-b border-slate-800">
+          <div id="mobile-navigation" className="md:hidden px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-slate-900 border-b border-slate-800">
             <Link to="/" onClick={() => setMobileMenuOpen(false)} className="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Home</Link>
             <Link to="/jobs" onClick={() => setMobileMenuOpen(false)} className="block text-slate-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Find Jobs</Link>
             {user ? (

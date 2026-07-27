@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
+import LoadingState from '../components/LoadingState';
 
 const AuthContext = createContext(null);
 
@@ -15,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     if (storedUser && token) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (e) {
+      } catch {
         localStorage.removeItem('user');
         localStorage.removeItem('accessToken');
       }
@@ -63,9 +64,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (nextUser) => {
+    localStorage.setItem('user', JSON.stringify(nextUser));
+    setUser(nextUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+      {loading ? <LoadingState label="Restoring your session…" className="min-h-screen" /> : children}
     </AuthContext.Provider>
   );
 };
