@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { useForm } from 'react-hook-form';
-import { Layers, FileText, CheckCircle2, XCircle, AlertCircle, Trash2, Edit2, Loader2, Briefcase } from 'lucide-react';
-import EmptyState from '../components/EmptyState';
-import { useToast } from '../context/ToastContext';
+import { Layers, FileText, CheckCircle2, XCircle, AlertCircle, Trash2, Edit2, Loader2 } from 'lucide-react';
 
 /**
  * Seeker dashboard tab layout combining application audit lists,
@@ -13,11 +11,11 @@ import { useToast } from '../context/ToastContext';
  */
 const SeekerDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { showToast } = useToast();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('applications');
+  const [profileMsg, setProfileMsg] = useState(null);
+  const [profileError, setProfileError] = useState(null);
   const [submittingProfile, setSubmittingProfile] = useState(false);
 
   const {
@@ -54,13 +52,14 @@ const SeekerDashboard = () => {
     try {
       await api.delete(`/api/applications/${appId}`);
       setApplications(applications.filter((app) => app.id !== appId));
-      showToast('Application withdrawn successfully.', 'success');
     } catch (e) {
-      showToast(e.response?.data?.message || 'Failed to withdraw application.', 'error');
+      alert(e.response?.data?.message || 'Failed to withdraw application.');
     }
   };
 
   const onProfileSubmit = async (data) => {
+    setProfileMsg(null);
+    setProfileError(null);
     setSubmittingProfile(true);
     try {
       // Fetch current user payload first
@@ -77,12 +76,12 @@ const SeekerDashboard = () => {
 
       const res = await api.put(`/api/users/${user.id}`, updatePayload);
       localStorage.setItem('user', JSON.stringify(res.data.data));
-      showToast('Profile updated successfully!', 'success');
+      setProfileMsg('Profile updated successfully! Reloading...');
       setTimeout(() => {
         window.location.reload();
       }, 1500);
     } catch (e) {
-      showToast(e.response?.data?.message || 'Failed to update profile details.', 'error');
+      setProfileError(e.response?.data?.message || 'Failed to update profile details.');
     } finally {
       setSubmittingProfile(false);
     }
@@ -118,21 +117,19 @@ const SeekerDashboard = () => {
       <div className="flex gap-4 border-b border-slate-850">
         <button
           onClick={() => setActiveTab('applications')}
-          className={`pb-3 text-sm font-bold border-b-2 transition-all ${
-            activeTab === 'applications'
+          className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'applications'
               ? 'border-purple-500 text-purple-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
+            }`}
         >
           My Applications ({applications.length})
         </button>
         <button
           onClick={() => setActiveTab('profile')}
-          className={`pb-3 text-sm font-bold border-b-2 transition-all ${
-            activeTab === 'profile'
+          className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeTab === 'profile'
               ? 'border-purple-500 text-purple-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
+            }`}
         >
           My Profile
         </button>
@@ -145,13 +142,12 @@ const SeekerDashboard = () => {
             <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
           </div>
         ) : applications.length === 0 ? (
-          <EmptyState
-            title="No Active Applications"
-            description="You haven't submitted any job applications yet. Discover matching roles and apply now."
-            actionText="Browse Available Jobs"
-            onActionClick={() => navigate('/jobs')}
-            icon={Briefcase}
-          />
+          <div className="bg-slate-900 border border-slate-800 p-12 text-center rounded-2xl space-y-3">
+            <p className="text-slate-400 font-medium">You haven't submitted any job applications yet.</p>
+            <Link to="/jobs" className="text-purple-400 hover:text-purple-300 text-sm font-semibold hover:underline">
+              Find Jobs and Apply Now
+            </Link>
+          </div>
         ) : (
           <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-900">
             <div className="overflow-x-auto">
@@ -200,6 +196,20 @@ const SeekerDashboard = () => {
         /* Profile Tab view */
         <div className="max-w-xl bg-slate-900 border border-slate-800 p-8 rounded-3xl space-y-6">
           <h3 className="text-xl font-bold text-slate-200 border-b border-slate-800 pb-3">Update Profile Info</h3>
+
+          {profileMsg && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm p-4 rounded-xl flex items-start gap-2.5">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span>{profileMsg}</span>
+            </div>
+          )}
+
+          {profileError && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-4 rounded-xl flex items-start gap-2.5">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span>{profileError}</span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onProfileSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

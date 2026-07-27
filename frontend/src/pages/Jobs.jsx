@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import api from '../services/api';
-import { Search, MapPin, Briefcase, DollarSign, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
-import JobCardSkeleton from '../components/JobCardSkeleton';
-import EmptyState from '../components/EmptyState';
-import { useToast } from '../context/ToastContext';
+import { Search, MapPin, Briefcase, DollarSign, Calendar, SlidersHorizontal, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 /**
  * Public paginated job board listings page. Connects dynamic search keywords,
  * filters (category, type, level, location, salary), sorting, and page properties.
  */
 const Jobs = () => {
-  const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [jobs, setJobs] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -67,7 +63,6 @@ const Jobs = () => {
         setTotalPages(res.data.data.totalPages);
         setTotalElements(res.data.data.totalElements);
       } catch (err) {
-        showToast('Failed to load job listings. Please check your network connection.', 'error');
         console.error('Failed to load job listings', err);
       } finally {
         setLoading(false);
@@ -206,20 +201,22 @@ const Jobs = () => {
           </div>
         </div>
 
-         <div className="lg:col-span-3 space-y-6">
+        {/* Right Side: Job Grid Cards */}
+        <div className="lg:col-span-3 space-y-6">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <JobCardSkeleton key={i} />
-              ))}
+            <div className="flex justify-center items-center py-24">
+              <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
             </div>
           ) : jobs.length === 0 ? (
-            <EmptyState
-              title="No Job Postings Found"
-              description="There are currently no job openings matching your search keywords or filter criteria."
-              actionText="Clear all filters"
-              onActionClick={() => setSearchParams(new URLSearchParams())}
-            />
+            <div className="bg-slate-900 border border-slate-800 p-12 text-center rounded-2xl space-y-3">
+              <p className="text-slate-400 font-medium">No job postings found matching your parameters.</p>
+              <button
+                onClick={() => setSearchParams(new URLSearchParams())}
+                className="text-purple-400 hover:text-purple-300 text-sm font-semibold hover:underline"
+              >
+                Clear all filters
+              </button>
+            </div>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
