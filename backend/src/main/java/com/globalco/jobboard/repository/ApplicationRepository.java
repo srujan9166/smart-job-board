@@ -67,4 +67,13 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
      */
     @EntityGraph(attributePaths = {"job", "job.company", "seeker", "seeker.user"})
     Page<Application> findByJobIdAndStatus(UUID jobId, ApplicationStatus status, Pageable pageable);
+
+    /**
+     * Checks if a seeker has already submitted an application to a specific job post.
+     *
+     * @param jobId job identifier
+     * @param seekerId seeker user identifier
+     * @return true if an application exists, false otherwise
+     */
+    boolean existsByJobIdAndSeekerUserId(UUID jobId, UUID seekerId);
 }
